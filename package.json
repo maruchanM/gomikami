@@ -1,0 +1,26 @@
+{
+  "name": "gomikami",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "python3 tools/check_stages.py && vite",
+    "build": "python3 tools/check_stages.py && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "check-stages": "python3 tools/check_stages.py"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-python": "^6.2.1",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.15",
+    "@fontsource/dotgothic16": "^5.3.1",
+    "@lezer/highlight": "^1.2.5",
+    "codemirror": "^6.0.2"
+  }
+}

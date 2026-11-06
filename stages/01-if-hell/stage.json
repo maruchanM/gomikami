@@ -1,0 +1,19 @@
+{
+  "title": "if地獄",
+  "subtitle": "映画館の料金計算",
+  "ticket": "【依頼】料金計算 ticket_price() を誰も触りたがりません。\n来月から料金改定の予定があるので、今のうちに綺麗にしておいてください。\n※動きは変えないこと（テスト参照）",
+  "timeLimitSec": 420,
+  "undoLimit": 30,
+  "events": [
+    {
+      "type": "spec_change",
+      "atSec": 150,
+      "tests": "spec_change_tests.py",
+      "message": "【緊急】営業部より: やっぱり来週からレイトショー割(20時以降開始は1400円)やります。\nticket_price に start_hour 引数(省略可)を追加してください。",
+      "solution": "solution_spec_change.py",
+      "orWhenKamido": 40,
+      "hiddenTests": "hidden_spec_change_tests.py"
+    }
+  ],
+  "hiddenTests": "hidden_tests.py"
+}
