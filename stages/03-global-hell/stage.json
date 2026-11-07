@@ -1,0 +1,19 @@
+{
+  "title": "グローバル地獄",
+  "subtitle": "ショッピングカートの会計",
+  "ticket": "【依頼】会計処理の関数たちがグローバル変数で連絡を取り合っています。\n誰がいつ何を書き換えたのか、もう誰にも分かりません。引数と戻り値で話すようにしてください。\n※checkout() の結果は変えないこと（テスト参照）",
+  "timeLimitSec": 420,
+  "undoLimit": 30,
+  "hiddenTests": "hidden_tests.py",
+  "events": [
+    {
+      "type": "spec_change",
+      "atSec": 150,
+      "orWhenKamido": 40,
+      "tests": "spec_change_tests.py",
+      "hiddenTests": "hidden_spec_change_tests.py",
+      "solution": "solution_spec_change.py",
+      "message": "【緊急】マーケ部より: 有料会員制度を始めます。会員は送料無料です。\ncheckout に member 引数（省略時 False、3番目）を追加してください。"
+    }
+  ]
+}

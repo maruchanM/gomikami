@@ -1,0 +1,19 @@
+{
+  "title": "コピペ地獄",
+  "subtitle": "支店別の月次レポート",
+  "ticket": "【依頼】月次レポートの関数が支店の数だけコピペされています。\n拠点が増えるたびに誰かが Ctrl+V しています。止めてください。\n※出力は1文字も変えないこと（経理がExcelに貼ってます）",
+  "timeLimitSec": 420,
+  "undoLimit": 30,
+  "hiddenTests": "hidden_tests.py",
+  "events": [
+    {
+      "type": "spec_change",
+      "atSec": 150,
+      "orWhenKamido": 40,
+      "tests": "spec_change_tests.py",
+      "hiddenTests": "hidden_spec_change_tests.py",
+      "solution": "solution_spec_change.py",
+      "message": "【緊急】経営企画部より: 来月、札幌支店がオープンします（目標 250,000円）。\nreport_sapporo(rows) を追加し、月次レポートの最後（福岡の後）に載せてください。"
+    }
+  ]
+}

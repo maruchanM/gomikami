@@ -31,7 +31,7 @@ function bar(value: number, max: number, cells = 10, on = "■", off = "□") {
   return on.repeat(filled) + off.repeat(cells - filled);
 }
 
-function mmss(sec: number) {
+export function mmss(sec: number) {
   return `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
 }
 
@@ -91,23 +91,39 @@ export class GameSession {
     this.log("スキャン完了。", "ok");
     window.addEventListener("keydown", this.onKey, true);
     this.timerId = window.setInterval(() => this.tick(), 1000 / SPEED);
+    const briefed = localStorage.getItem("gomikami.briefed") === "1";
+    localStorage.setItem("gomikami.briefed", "1");
     await this.dialog(
-      "作戦説明",
-      [
-        "・main.py を書き直して「神度」を上げろ",
-        "・tests.py は仕様。全部通したまま直すこと",
-        `・テストが赤いまま [実行] すると 信用度 -${FAIL_PENALTY}。0 で炎上`,
-        `・Ctrl+Z (Undo) は ${this.stage.undoLimit} 回まで`,
-        "・[提出] は ALL GREEN の時だけ受理される",
-        "・exec や sys などの黒魔術は監査部が見ている（実行すら許されない）",
-        "　使えるモジュール:",
-        "　　datetime, math, calendar, itertools, functools,",
-        "　　decimal, collections, enum, dataclasses, typing など",
-        "・画面に出ていない「抜き打ち検査」もある。仕様どおりに書くこと",
-        `・制限時間 ${mmss(this.stage.timeLimitSec)}。何が起きても慌てないこと`,
-      ].join("\n"),
+      briefed ? `STAGE ${this.stage.id.slice(0, 2)}: ${this.stage.title}` : "作戦説明",
+      (briefed ? this.shortBriefing() : this.fullBriefing()).join("\n"),
       [{ label: "了解", value: true }],
     );
+  }
+
+  private fullBriefing() {
+    return [
+      "・main.py を書き直して「神度」を上げろ",
+      "・tests.py は仕様。全部通したまま直すこと",
+      `・テストが赤いまま [実行] すると 信用度 -${FAIL_PENALTY}。0 で炎上`,
+      `・Ctrl+Z (Undo) は ${this.stage.undoLimit} 回まで`,
+      "・[提出] は ALL GREEN の時だけ受理される",
+      "・exec や sys などの黒魔術は監査部が見ている（実行すら許されない）",
+      "　使えるモジュール:",
+      "　　datetime, math, calendar, itertools, functools,",
+      "　　decimal, collections, enum, dataclasses, typing など",
+      "・画面に出ていない「抜き打ち検査」もある。仕様どおりに書くこと",
+      `・制限時間 ${mmss(this.stage.timeLimitSec)}。何が起きても慌てないこと`,
+    ];
+  }
+
+  /** 2回目以降はルール説明を省いて依頼内容だけ */
+  private shortBriefing() {
+    return [
+      this.stage.ticket,
+      "",
+      `制限時間 ${mmss(this.stage.timeLimitSec)} / Undo ${this.stage.undoLimit} 回 / 抜き打ち検査あり`,
+      "（ルールは前と同じ。Ctrl+Enter で実行）",
+    ];
   }
 
   private render() {

@@ -1,0 +1,19 @@
+{
+  "title": "命名地獄",
+  "subtitle": "クラスの成績集計",
+  "ticket": "【依頼】成績集計のコードが読めません。f, g, h, l, O…前任者は暗号で会話していたようです。\n読める名前にしてください。ついでに組み込みの list や sum を上書きしているのも直して。\n※grade_report() と passed_count() の結果は変えないこと",
+  "timeLimitSec": 360,
+  "undoLimit": 30,
+  "hiddenTests": "hidden_tests.py",
+  "events": [
+    {
+      "type": "spec_change",
+      "atSec": 130,
+      "orWhenKamido": 40,
+      "tests": "spec_change_tests.py",
+      "hiddenTests": "hidden_spec_change_tests.py",
+      "solution": "solution_spec_change.py",
+      "message": "【緊急】教頭先生より: 成績優秀者（評価S）を表彰します。\nhonor_students(data) を追加して、優秀者の名前を順位順のリストで返してください。"
+    }
+  ]
+}

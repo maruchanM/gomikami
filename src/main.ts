@@ -1,6 +1,6 @@
 import "@fontsource/dotgothic16";
 import "./style.css";
-import { escapeHtml, GameSession, type GameOutcome } from "./game";
+import { escapeHtml, GameSession, type GameOutcome, mmss } from "./game";
 import { PyRunner } from "./pyrunner";
 import { rankOf } from "./scoring";
 import { type Stage, STAGES } from "./stages";
@@ -92,7 +92,16 @@ async function boot() {
     await print(" 失敗 (ネットワークを確認してください)");
     return;
   }
-  title();
+  const direct = stageFromUrl();
+  if (direct) play(direct);
+  else title();
+}
+
+/** ?stage=2 または ?stage=02-copipe-hell でタイトルを飛ばして直接始める */
+function stageFromUrl() {
+  const q = new URLSearchParams(location.search).get("stage");
+  if (!q) return null;
+  return STAGES.find((s) => s.id === q || Number(s.id.slice(0, 2)) === Number(q)) ?? null;
 }
 
 async function title() {
@@ -110,27 +119,76 @@ async function title() {
 
 // ---------------------------------------------------------------- ステージ選択
 
-function select() {
+function select(focus = 0) {
   const rows = STAGES.map((s, i) => {
     const best = loadBest(s);
     const record = best ? `BEST ${best.score}点 [${best.rank}]` : "未クリア";
-    return html`<li><button data-i="${i}">${s.id.slice(0, 2)}. ${s.title} <span class="dim">─ ${s.subtitle}</span></button><span class="record">${record}</span></li>`;
+    return html`<li><button data-i="${i}"><span class="key">[${i + 1}]</span> ${s.title} <span class="dim">─ ${s.subtitle} (${mmss(s.timeLimitSec)})</span></button><span class="record${best ? "" : " dim"}">${record}</span></li>`;
   }).join("");
+  const cleared = STAGES.filter((s) => loadBest(s)).length;
   app.innerHTML = html`
     <div class="screen select">
-      <h2>&gt; SELECT STAGE_</h2>
-      <ul class="stage-list">${rows}<li class="dim">?? ─ COMING SOON (たぶん)</li></ul>
-      <p class="dim small">↑↓ で選択 / Enter で開始</p>
+      <h2>&gt; SELECT STAGE_ <span class="dim small">クリア ${cleared}/${STAGES.length}</span></h2>
+      <ul class="stage-list">${rows}<li class="dim">[?] ボス: 歴史的遺産 ─ COMING SOON (たぶん)</li></ul>
+      <p class="dim small">↑↓ で選択 / Enter で開始 / 数字キーで即開始 / どのステージからでも遊べます</p>
     </div>`;
   const buttons = [...app.querySelectorAll<HTMLButtonElement>(".stage-list button")];
-  buttons.forEach((b) => b.addEventListener("click", () => play(STAGES[Number(b.dataset.i)])));
-  buttons[0]?.focus();
-  app.querySelector(".stage-list")!.addEventListener("keydown", (e) => {
-    const k = (e as KeyboardEvent).key;
+  buttons.forEach((b) => b.addEventListener("click", () => start(Number(b.dataset.i))));
+  buttons[Math.min(focus, buttons.length - 1)]?.focus();
+  const onKey = (e: KeyboardEvent) => {
     const i = buttons.indexOf(document.activeElement as HTMLButtonElement);
-    if (k === "ArrowDown") buttons[(i + 1) % buttons.length].focus();
-    if (k === "ArrowUp") buttons[(i - 1 + buttons.length) % buttons.length].focus();
-  });
+    if (e.key === "ArrowDown") buttons[(i + 1) % buttons.length].focus();
+    else if (e.key === "ArrowUp") buttons[(i - 1 + buttons.length) % buttons.length].focus();
+    else if (/^[1-9]$/.test(e.key) && Number(e.key) <= STAGES.length) start(Number(e.key) - 1);
+    else return;
+    e.preventDefault();
+  };
+  const start = (i: number) => {
+    window.removeEventListener("keydown", onKey);
+    play(STAGES[i]);
+  };
+  window.addEventListener("keydown", onKey);
+}
+
+/**
+ * リザルト・ゲームオーバー後のメニュー。←→ で選んで Enter、または頭文字キー。
+ * 直前の連打で即座に決定しないよう、少しの間は無視する。
+ */
+function afterMenu(stage: Stage, primary: "next" | "retry") {
+  const index = STAGES.indexOf(stage);
+  const next = STAGES[index + 1];
+  const items = [
+    ...(next ? [{ key: "n", label: `[N] 次へ: ${next.title}`, go: () => play(next) }] : []),
+    { key: "r", label: "[R] もう一度", go: () => play(stage) },
+    { key: "s", label: "[S] ステージ選択", go: () => select(index) },
+  ];
+  if (primary === "retry") items.unshift(...items.splice(items.findIndex((it) => it.key === "r"), 1));
+  const box = app.querySelector<HTMLElement>(".after-menu")!;
+  box.innerHTML = items.map((it, i) => html`<button data-i="${i}">${escapeHtml(it.label)}</button>`).join("");
+  const buttons = [...box.querySelectorAll<HTMLButtonElement>("button")];
+  const shownAt = performance.now();
+  let done = false;
+  const choose = (i: number) => {
+    if (done || performance.now() - shownAt < 600) return;
+    done = true;
+    window.removeEventListener("keydown", onKey);
+    document.body.classList.remove("flash-red");
+    items[i].go();
+  };
+  const onKey = (e: KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const i = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    const byKey = items.findIndex((it) => it.key === e.key.toLowerCase());
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") buttons[(i + 1) % buttons.length].focus();
+    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") buttons[(i - 1 + buttons.length) % buttons.length].focus();
+    else if (e.key === "Enter") choose(Math.max(i, 0));
+    else if (byKey >= 0) choose(byKey);
+    else return;
+    e.preventDefault();
+  };
+  buttons.forEach((b, i) => b.addEventListener("click", () => choose(i)));
+  buttons[0].focus();
+  window.addEventListener("keydown", onKey);
 }
 
 // ---------------------------------------------------------------- プレイ
@@ -140,7 +198,7 @@ function play(stage: Stage) {
   void session.start();
 }
 
-async function result(outcome: GameOutcome) {
+function result(outcome: GameOutcome) {
   if (outcome.kind === "quit") return select();
   if (outcome.kind === "gameover") {
     document.body.classList.add("flash-red");
@@ -150,11 +208,9 @@ async function result(outcome: GameOutcome) {
         <p class="big-sub err">${escapeHtml(outcome.title)}</p>
         <p>${escapeHtml(outcome.reason)}</p>
         <p class="dim">STAGE ${outcome.stage.id.slice(0, 2)}: ${outcome.stage.title}</p>
-        <p class="blink">PRESS ENTER</p>
+        <div class="after-menu"></div>
       </div>`;
-    await waitForEnter(app);
-    document.body.classList.remove("flash-red");
-    return select();
+    return afterMenu(outcome.stage, "retry");
   }
 
   const rank = rankOf(outcome.kamido);
@@ -180,10 +236,9 @@ async function result(outcome: GameOutcome) {
 信用度   ${String(outcome.hp).padStart(5)}
 ─────────────────
 SCORE    ${String(score).padStart(5)}${isNew ? "  ★NEW RECORD★" : ""}</pre>
-      <p class="blink">PRESS ENTER</p>
+      <div class="after-menu"></div>
     </div>`;
-  await waitForEnter(app);
-  select();
+  afterMenu(outcome.stage, "next");
 }
 
 void boot();

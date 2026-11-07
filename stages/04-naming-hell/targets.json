@@ -1,0 +1,24 @@
+{
+  "solution.py": {
+    "complexity": 3,
+    "nesting": 2,
+    "duplication": 0,
+    "length": 5,
+    "naming": 0,
+    "magic": 0,
+    "globals": 0,
+    "longlines": 0,
+    "tricks": 0
+  },
+  "solution_spec_change.py": {
+    "complexity": 3,
+    "nesting": 2,
+    "duplication": 0,
+    "length": 5,
+    "naming": 0,
+    "magic": 0,
+    "globals": 0,
+    "longlines": 0,
+    "tricks": 0
+  }
+}
